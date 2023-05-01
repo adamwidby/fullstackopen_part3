@@ -1,7 +1,9 @@
 const express = require("express");
 const app = express();
 
-const persons = [
+app.use(express.json());
+
+let persons = [
   {
     id: 1,
     name: "Arto Hellas",
@@ -38,6 +40,58 @@ app.get("/info", (request, response) => {
   console.log(output);
 
   response.send(output);
+});
+
+app.get("/api/persons/:id", (request, response) => {
+  const id = Number(request.params.id);
+  const person = persons.find((person) => person.id === id);
+
+  if (person) {
+    response.json(person);
+  } else {
+    response.status(404).end();
+  }
+});
+
+app.delete("/api/persons/:id", (request, response) => {
+  const id = Number(request.params.id);
+  persons = persons.filter((person) => person.id !== id);
+
+  response.status(204).end();
+});
+
+app.post("/api/persons", (request, response) => {
+  const body = request.body;
+
+  if (!body.name || !body.number) {
+    return response.status(400).json({
+      error: "name or number missing",
+    });
+  }
+
+  if (persons.filter((person) => person.name === body.name).length > 0) {
+    return response.status(400).json({
+      error: "Duplicate Name!",
+    });
+  }
+
+  if (persons.filter((person) => person.number === body.number).length > 0) {
+    return response.status(400).json({
+      error: "Duplicate Number!",
+    });
+  }
+
+  const newId = Math.floor(Math.random() * 10000);
+
+  const newPerson = {
+    id: newId,
+    name: body.name,
+    number: body.number,
+  };
+
+  persons = persons.concat(newPerson);
+
+  response.json(persons);
 });
 
 const PORT = 3001;
